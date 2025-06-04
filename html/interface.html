@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dire's Deck Builder</title>
+</head>
+
+<body class="section">
+    <h1>Welcome to Dire's Deckbuilder</h1>
+
+    <div id="newDeckNameField" class="section">
+        <input type="text" placeholder="Enter new deck name">
+        <button onclick="createDeck()">Create Deck</button>
+    </div>
+    <style>
+        :root {
+            --primary: hsl(235, 86%, 65%);
+            --primary-light: hsl(235, 88%, 73%);
+            --dark: #121212;
+            --light: #E4E4E4;
+            --grey: #424242;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: top;
+        }
+
+        textarea {
+            width: 300px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: darkred;
+            color: var(--light);
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition-duration: 0.4s;
+        }
+
+        button:hover {
+            background-color: white;
+            color: red;
+        }
+        
+    </style>
+</body>
+</html>
