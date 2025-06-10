@@ -20,6 +20,12 @@ type Deck struct {
 	colorIdentity string
 }
 
+type Passthroughs struct {
+	working_Deck      Deck
+	working_Directory string
+	format            string
+}
+
 var staticFiles embed.FS
 
 func main() {
@@ -56,7 +62,10 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
-	router.Post("/newdeck/{deckname}", handlercreatedeck)
+
+	psth := &Passthroughs{}
+
+	router.Post("/newdeck/{deckname}", psth.handlercreatedeck)
 
 	srv := &http.Server{
 		Addr:              ":" + port,

@@ -8,15 +8,17 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func handlercreatedeck(w http.ResponseWriter, r *http.Request) {
+func (pass *Passthroughs) handlercreatedeck(w http.ResponseWriter, r *http.Request) {
 	deckName := chi.URLParam(r, "deckname")
 
-	err := os.WriteFile(fmt.Sprintf("decks/&s.txt", deckName), []byte(""), 0644)
+	err := os.WriteFile(fmt.Sprintf("decks/%s.txt", deckName), []byte(""), 0644)
 	if err != nil {
 		http.Error(w, "could bnote create deck", http.StatusInternalServerError)
 		return
 	}
 
+	pass.working_Directory = "decks/%s.txt"
+
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Deck createed: " + deckName))
+	w.Write([]byte("Deck created: " + deckName))
 }
