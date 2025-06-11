@@ -10,8 +10,10 @@
     <h1>Welcome to Dire's Deckbuilder</h1>
 
     <div id="newDeckNameField" class="section">
-        <input type="text" placeholder="Enter new deck name">
-        <button onclick="createDeck()">Create Deck</button>
+        <form id="createDeckForm" action="/newdeck/" method="POST" onsubmit="event.preventDefault(); createDeck();">
+            <input type="text" name="deckname" placeholder="Enter new deck name">
+            <button type="submit">Create Deck</button>
+        </form>
     </div>
     <style>
         :root {
@@ -64,5 +66,32 @@
         }
         
     </style>
+    <script>
+        function createDeck() {
+            const form = document.getElementById('createDeckForm');
+            const formData = new FormData(form);
+            const deckName = formData.get('deckname');
+
+            const urlEncodedData = new URLSearchParams(formData).toString();
+
+            fetch('/newdeck/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok){
+                    console.error('Error creating deck:', response.statusText);
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log('Deck creation successful:', data);
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            })
+            console.log("Attempting to create deck with name:", deckName);
+        }
+    </script>
 </body>
 </html>

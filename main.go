@@ -26,6 +26,7 @@ type Passthroughs struct {
 	format       string
 }
 
+//go:embed html
 var staticFiles embed.FS
 
 func main() {
@@ -65,7 +66,7 @@ func main() {
 
 	psth := &Passthroughs{}
 
-	router.Post("/newdeck/{deckname}", psth.handlercreatedeck)
+	router.Post("/newdeck/", psth.handlercreatedeck)
 
 	srv := &http.Server{
 		Addr:              ":" + port,

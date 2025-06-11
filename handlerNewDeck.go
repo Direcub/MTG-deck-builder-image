@@ -2,18 +2,24 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-
-	"github.com/go-chi/chi"
 )
 
 func (pass *Passthroughs) handlercreatedeck(w http.ResponseWriter, r *http.Request) {
-	deckName := chi.URLParam(r, "deckname")
-
-	err := os.WriteFile(fmt.Sprintf("decks/%s.txt", deckName), []byte(""), 0644)
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "could bnote create deck", http.StatusInternalServerError)
+		http.Error(w, "could not create deck", http.StatusInternalServerError)
+		return
+	}
+
+	deckName := r.Form.Get("deckname")
+	log.Printf(deckName)
+
+	err = os.WriteFile(fmt.Sprintf("decks/%s.txt", deckName), []byte(""), 0644)
+	if err != nil {
+		http.Error(w, "could not create deck", http.StatusInternalServerError)
 		return
 	}
 
