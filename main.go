@@ -18,12 +18,12 @@ type Deck struct {
 	name          string
 	cards         []Scryfall.Card
 	colorIdentity string
+	file          string
 }
 
 type Passthroughs struct {
-	working_Deck      Deck
-	working_Directory string
-	format            string
+	working_Deck Deck
+	format       string
 }
 
 var staticFiles embed.FS

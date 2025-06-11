@@ -17,7 +17,9 @@ func (pass *Passthroughs) handlercreatedeck(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	pass.working_Directory = "decks/%s.txt"
+	// add header reading to check format
+
+	pass.working_Deck = Deck{name: deckName, file: fmt.Sprintf("./decks/%s.txt", deckName)}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Deck created: " + deckName))
