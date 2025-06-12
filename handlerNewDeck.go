@@ -15,7 +15,18 @@ func (pass *Passthroughs) handlercreatedeck(w http.ResponseWriter, r *http.Reque
 	}
 
 	deckName := r.Form.Get("deckname")
-	log.Printf(deckName)
+	format := r.Form.Get("format")
+	switch format {
+	case "Commander":
+		pass.format = format
+	case "Standard":
+		pass.format = format
+	default:
+		http.Error(w, "please select a format", http.StatusForbidden)
+		return
+	}
+	log.Print(format)
+	log.Print(deckName)
 
 	err = os.WriteFile(fmt.Sprintf("decks/%s.txt", deckName), []byte(""), 0644)
 	if err != nil {
@@ -23,9 +34,8 @@ func (pass *Passthroughs) handlercreatedeck(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// add header reading to check format
-
 	pass.working_Deck = Deck{name: deckName, file: fmt.Sprintf("./decks/%s.txt", deckName)}
+	pass.format = format
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Deck created: " + deckName))

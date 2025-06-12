@@ -16,6 +16,7 @@ import (
 
 type Deck struct {
 	name          string
+	commander     Scryfall.Card
 	cards         []Scryfall.Card
 	colorIdentity string
 	file          string
