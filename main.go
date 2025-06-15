@@ -53,6 +53,8 @@ func main() {
 		MaxAge:           300,
 	}))
 
+	psth := &Passthroughs{}
+
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		f, err := staticFiles.Open("html/interface.html")
 		if err != nil {
@@ -65,9 +67,8 @@ func main() {
 		}
 	})
 
-	psth := &Passthroughs{}
-
 	router.Post("/newdeck/", psth.handlercreatedeck)
+	router.Get("/listdecks/", psth.handlerListdecks)
 
 	srv := &http.Server{
 		Addr:              ":" + port,
