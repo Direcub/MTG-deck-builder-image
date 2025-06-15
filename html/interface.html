@@ -7,6 +7,7 @@
 </head>
 
 <body class="section"></body>
+
      <div id="deckList" style="
         position: absolute;
         top: 0;
@@ -35,6 +36,7 @@
                 <button type="submit">Create Deck</button>
             </form>
         </div>
+        <div id="deckActions" class="section"></div>
     </div>
     <style>
         :root {
@@ -199,15 +201,37 @@
                 li.textContent = deck;
                 li.style.cursor = 'pointer';
                 li.style.margin = '5px 0';
+                li.style.padding = '5px';
+                li.style.borderRadius = '5px';
+
                 li.addEventListener('click', () => {
+                    selectedDeck = deck;
                     console.log(`Deck clicked: ${deck}`);
                     // You can later redirect or load the deck editor here
+
+                    Array.from(deckList.children).forEach(child => child.style.backgroundColor = '');
+                    li.style.backgroundColor = 'darkred';
+
+                    showDeckActions(deck);
                 });
                 deckList.appendChild(li);
             });
         })
         .catch(err => console.error('Error loading decks:', err));
-        
+}
+
+    function showDeckActions(deckName) {
+        const container = document.getElementById('deckActions');
+        container.innerHTML = ''; // Clear previous
+
+        const editButton = document.createElement('button');
+        editButton.textContent = `Edit Deck: ${deckName}`;
+        editButton.onclick = () => {
+            console.log(`Editing deck: ${deckName}`);
+            // TODO: Navigate to deck editor, or load editor inline
+        };
+
+        container.appendChild(editButton);
 }
 
 window.onload = function () {
