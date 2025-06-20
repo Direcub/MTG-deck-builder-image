@@ -193,12 +193,13 @@
             const deckList = document.getElementById('deckListItems');
             deckList.innerHTML = ''; // Clear old list
 
-            
             console.log("Deck list received from server:", data); // ← This will show you what it's trying to render
 
             data.forEach(deck => {
+                const displayName = deck.endsWith('.txt') ? deck.slice(0, -4) : deck;
+
                 const li = document.createElement('li');
-                li.textContent = deck;
+                li.textContent = displayName;
                 li.style.cursor = 'pointer';
                 li.style.margin = '5px 0';
                 li.style.padding = '5px';
@@ -225,7 +226,7 @@
         container.innerHTML = ''; // Clear previous
 
         const editButton = document.createElement('button');
-        editButton.textContent = `Edit Deck: ${deckName}`;
+        editButton.textContent = `Edit Deck`;
         editButton.onclick = () => {
             console.log(`Editing deck: ${deckName}`);
             // TODO: Navigate to deck editor, or load editor inline
