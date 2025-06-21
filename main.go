@@ -57,6 +57,7 @@ func main() {
 	router.Post("/newdeck/", psth.handlercreatedeck)
 	router.Get("/listdecks/", psth.handlerListdecks)
 	router.Get("/editor", psth.handlerEditor)
+	router.Get("/searchcards", psth.handlerSearchCards)
 
 	srv := &http.Server{
 		Addr:              ":" + port,
