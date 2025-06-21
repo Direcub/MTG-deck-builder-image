@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -24,7 +23,6 @@ type Deck struct {
 
 type Passthroughs struct {
 	working_Deck Deck
-	format       string
 }
 
 //go:embed html
@@ -55,20 +53,10 @@ func main() {
 
 	psth := &Passthroughs{}
 
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		f, err := staticFiles.Open("html/interface.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer f.Close()
-		if _, err := io.Copy(w, f); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
-
+	router.Get("/", psth.handlerLanding)
 	router.Post("/newdeck/", psth.handlercreatedeck)
 	router.Get("/listdecks/", psth.handlerListdecks)
+	router.Get("/editor", psth.handlerEditor)
 
 	srv := &http.Server{
 		Addr:              ":" + port,

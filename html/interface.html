@@ -206,10 +206,6 @@
                 li.style.borderRadius = '5px';
 
                 li.addEventListener('click', () => {
-                    selectedDeck = deck;
-                    console.log(`Deck clicked: ${deck}`);
-                    // You can later redirect or load the deck editor here
-
                     Array.from(deckList.children).forEach(child => child.style.backgroundColor = '');
                     li.style.backgroundColor = 'darkred';
 
@@ -223,13 +219,13 @@
 
     function showDeckActions(deckName) {
         const container = document.getElementById('deckActions');
-        container.innerHTML = ''; // Clear previous
+        container.innerHTML = '';
 
         const editButton = document.createElement('button');
         editButton.textContent = `Edit Deck`;
         editButton.onclick = () => {
             console.log(`Editing deck: ${deckName}`);
-            // TODO: Navigate to deck editor, or load editor inline
+            window.location.href = `/editor?deck=${encodeURIComponent(deckName)}`;
         };
 
         container.appendChild(editButton);

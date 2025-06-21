@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Deck Editor</title>
+</head>
+
+<body>
+    <h1>Deck Editor</h1>
+    <p>Selected deck :</p>
+</body>
+
+<script>
+    const params = new URLSearchParams(window.location.search)
+    const deckName = params.get("deck")
+    console.log("Editing deck:", deckName);
+</script>
+
+
+</html>
