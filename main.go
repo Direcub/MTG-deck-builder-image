@@ -23,6 +23,7 @@ type Deck struct {
 
 type Passthroughs struct {
 	working_Deck Deck
+	Client       *Scryfall.Client
 }
 
 //go:embed html
@@ -52,6 +53,8 @@ func main() {
 	}))
 
 	psth := &Passthroughs{}
+
+	psth.Client, err = Scryfall.NewClient()
 
 	router.Get("/", psth.handlerLanding)
 	router.Post("/newdeck/", psth.handlercreatedeck)
