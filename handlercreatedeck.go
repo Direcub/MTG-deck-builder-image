@@ -40,8 +40,7 @@ func (pass *Passthroughs) handlercreatedeck(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	fmt.Fprintf(w, "Deck '%s' created successfully!", deckName)
-
 	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "Deck '%s' created successfully!", deckName)
 	w.Write([]byte("Deck created: " + deckName))
 }

@@ -15,6 +15,11 @@ func (pass *Passthroughs) handlerSearchCards(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	hasCommander := r.URL.Query().Get("commander")
+	if hasCommander == "false" {
+		query += " is:commander"
+	}
+
 	results, err := searchCard(pass.Client, query, scryfall.SearchCardsOptions{
 		Unique: scryfall.UniqueModeCards,
 	})
@@ -25,33 +30,6 @@ func (pass *Passthroughs) handlerSearchCards(w http.ResponseWriter, r *http.Requ
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
-}
-
-func (pass *Passthroughs) handlerCommanderSelect(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
-	if query == "" {
-		http.Error(w, "missing search query", http.StatusInternalServerError)
-		return
-	}
-
-	results, err := searchCard(pass.Client, query, scryfall.SearchCardsOptions{
-		Unique: scryfall.UniqueModeCards,
-	})
-	if err != nil {
-		http.Error(w, "failed to search card", http.StatusInternalServerError)
-		return
-	}
-
-	commanders := make([]scryfall.Card, 0, len(results))
-
-	for _, card := range results {
-		if card.TypeLine != "" && (card.TypeLine == "Legendary Creature" || card.TypeLine == "Planeswalker") {
-			commanders = append(commanders, card)
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(commanders)
 }
 
 func searchCard(client *scryfall.Client, query string, opts scryfall.SearchCardsOptions) ([]scryfall.Card, error) {

@@ -227,8 +227,30 @@
             console.log(`Editing deck: ${deckName}`);
             window.location.href = `/editor?deck=${encodeURIComponent(deckName)}`;
         };
-
         container.appendChild(editButton);
+
+        // Add Delete Deck button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete Deck';
+        deleteButton.style.marginLeft = '10px';
+        // Match Edit Deck button style
+        deleteButton.style.padding = editButton.style.padding;
+        deleteButton.style.width = editButton.style.width;
+        deleteButton.style.fontSize = editButton.style.fontSize;
+        deleteButton.onclick = function() {
+            if (!confirm(`Are you sure you want to delete "${deckName}"? This cannot be undone.`)) return;
+            fetch(`/deletedeck?name=${encodeURIComponent(deckName)}`, { method: 'DELETE' })
+                .then(res => {
+                    if (res.ok) {
+                        alert('Deck deleted!');
+                        loadDecks();
+                        container.innerHTML = '';
+                    } else {
+                        res.text().then(msg => alert('Failed to delete deck: ' + msg));
+                    }
+                });
+        };
+        container.appendChild(deleteButton);
 }
 
 window.onload = function () {
