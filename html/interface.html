@@ -161,10 +161,7 @@
             })
             .then(data => {
                 console.log('Deck creation successful:', data);
-            })
-            .then(data => {
-                console.log('Deck creation successful:', data);
-                loadDecks(); // <-- Refresh the deck list
+                loadDecks();
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
@@ -177,11 +174,8 @@
 
     formatButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Remove 'selected' class from all buttons
             formatButtons.forEach(btn => btn.classList.remove('selected'));
-            // Add 'selected' to the clicked one
             button.classList.add('selected');
-            // Update hidden input
             formatInput.value = button.getAttribute('data-format');
         });
     });
@@ -229,12 +223,9 @@
         };
         container.appendChild(editButton);
 
-        // Add Delete Deck button
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete Deck';
-        deleteButton.style.marginLeft = '10px';
-        // Match Edit Deck button style
-        deleteButton.style.padding = editButton.style.padding;
+        deleteButton.style.padding = editButton.style.padding + '5px';
         deleteButton.style.width = editButton.style.width;
         deleteButton.style.fontSize = editButton.style.fontSize;
         deleteButton.onclick = function() {

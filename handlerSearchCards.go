@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/BlueMonday/go-scryfall"
@@ -15,14 +16,19 @@ func (pass *Passthroughs) handlerSearchCards(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	hasCommander := r.URL.Query().Get("commander")
+	hasCommander := r.URL.Query().Get("hasCommander")
 	if hasCommander == "false" {
 		query += " is:commander"
 	}
 
-	results, err := searchCard(pass.Client, query, scryfall.SearchCardsOptions{
-		Unique: scryfall.UniqueModeCards,
-	})
+	format := r.URL.Query().Get("format")
+	if format == "Commander" || format == "Standard" {
+		query += " f:" + format
+	} else {
+		log.Printf("Unsupported format: %s", format)
+	}
+
+	results, err := searchCard(pass.Client, query)
 	if err != nil {
 		http.Error(w, "failed to search card", http.StatusInternalServerError)
 		return
@@ -32,9 +38,11 @@ func (pass *Passthroughs) handlerSearchCards(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(results)
 }
 
-func searchCard(client *scryfall.Client, query string, opts scryfall.SearchCardsOptions) ([]scryfall.Card, error) {
+func searchCard(client *scryfall.Client, query string) ([]scryfall.Card, error) {
 	ctx := context.Background()
-	results, err := client.SearchCards(ctx, query, opts)
+	results, err := client.SearchCards(ctx, query, scryfall.SearchCardsOptions{
+		Unique: scryfall.UniqueModeCards,
+	})
 	if err != nil {
 		return nil, err
 	}

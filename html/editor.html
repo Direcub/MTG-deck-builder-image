@@ -111,10 +111,16 @@
 
 <body>
     <h1 id="deckTitel">Editing: ...</h1>
+    <span id="deckValidityIndicator" title="Deck Validity" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#888;margin-left:10px;vertical-align:middle;"></span>
+    <span id="deckValidityText" style="margin-left:6px;font-weight:bold;"></span>
     <p id="deckFormat">Format: ...</p>
 
-    <!-- Commander display at top center -->
+
     <div id="commanderTopPanel" style="display:none; justify-content:center; align-items:center; margin: 10px 0 0 0;">
+    </div>
+
+    <div id="returnButton" style="position: absolute; top: 20px; right: 32px; z-index: 20;"">
+        <button onclick="window.location.href='/'">Return to Deck Libary</button>
     </div>
 
     <div style="display: flex; height: calc(100vh - 140px);">
@@ -134,21 +140,19 @@
         </div>
     </div>
 
-    <!-- Centered Save Deck button -->
     <div id="saveDeckButton">
         <button onclick="saveDeck()" style="font-size: 1.2em; padding: 12px 32px;">Save Deck</button>
     </div>
     <script>
-        // --- Begin inlined editor.js ---
         const params = new URLSearchParams(window.location.search)
         const deckName = params.get("deck")
         let deckFormat = "Unknown";
         let hasCommander = false;
-        let currentDeckCards = []; // Track current deck cards for saving
-        let selectedCommander = null; // Track selected commander
+        let currentDeckCards = [];
+        let selectedCommander = null;
         console.log("Editing deck:", deckName);
 
-        // Utility to show card image on hover
+
         function showCardImage(card, event) {
             let img = document.getElementById('cardHoverImage');
             if (!img) {
@@ -161,8 +165,13 @@
                 img.style.pointerEvents = 'none';
                 document.body.appendChild(img);
             }
-            // Only use the standard face (normal image)
-            let url = card.image_uris && card.image_uris.normal ? card.image_uris.normal : null;
+            // Use the standard face (normal image), or for double-faced cards, use the front face
+            let url = null;
+            if (card.image_uris && card.image_uris.normal) {
+                url = card.image_uris.normal;
+            } else if (card.card_faces && card.card_faces[0] && card.card_faces[0].image_uris && card.card_faces[0].image_uris.normal) {
+                url = card.card_faces[0].image_uris.normal;
+            }
             if (url) {
                 img.src = url;
                 img.style.display = 'block';
@@ -183,59 +192,71 @@
                 img.style.display = 'none';
             }
         }
+
         function hideCardImage() {
             const img = document.getElementById('cardHoverImage');
             if (img) img.style.display = 'none';
         }
 
-        // Add card to deck from search results
-        function addCardToDeck(cardName) {
-            // Find the card object from the last search results
-            const list = document.getElementById("searchResultsList");
-            let foundCard = null;
-            for (let i = 0; i < list.children.length; i++) {
-                if (list.children[i].textContent === cardName) {
-                    // Use the card object from the search result (if available)
-                    foundCard = list.children[i].cardObj;
-                    break;
-                }
-            }
-            // If not found, just add by name
-            if (!foundCard) {
-                foundCard = { name: cardName };
-            }
+        function isBasicLand(card) {
+            if (card.type_line && card.type_line.includes('Basic Land')) return true;
+            // Fallback: check common basic land names
+            const basicNames = [
+                'Plains', 'Island', 'Swamp', 'Mountain', 'Forest',
+                'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island',
+                'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'
+            ];
+            return basicNames.includes(card.name);
+        }
+
+        function addCardToDeck(card) {
             // If no commander and format is Commander, set as commander
             if (deckFormat === 'Commander' && !selectedCommander) {
-                selectedCommander = foundCard;
+                selectedCommander = card;
                 renderDeckCards(currentDeckCards);
                 return;
             }
-            // Commander color identity enforcement
-            if (deckFormat === 'Commander' && selectedCommander && foundCard.color_identity) {
-                // If card has any color not in commander's color identity, block it
-                for (const color of foundCard.color_identity) {
+            if (deckFormat === 'Commander' && selectedCommander && card.color_identity) {
+                for (const color of card.color_identity) {
                     if (!window.commanderColorIdentity.includes(color)) {
                         alert('Card color identity does not match commander.');
                         return;
                     }
                 }
             }
-            // Prevent duplicates
-            if (!currentDeckCards.some(c => c.name === foundCard.name)) {
-                currentDeckCards.push(foundCard);
+            if (deckFormat === 'Commander') {
+                if (currentDeckCards.some(c => c.name === card.name)) {
+                    alert('You can only have one copy of each card in Commander.');
+                    return;
+                }
+                currentDeckCards.push(card);
+                renderDeckCards(currentDeckCards);
+            } else if (deckFormat === 'Standard') {
+                const count = currentDeckCards.filter(c => c.name === card.name).length;
+                const unlimited = card.oracle_text && card.oracle_text.includes('any number of cards named');
+                if (!isBasicLand(card) && !unlimited && count >= 4) {
+                    alert('You can only have up to 4 copies of a non-basic land in Standard.');
+                    return;
+                }
+                currentDeckCards.push(card);
                 renderDeckCards(currentDeckCards);
             }
         }
 
-        // Update search results to show image on hover and add to deck or set commander on click
         function handleSearch() {
             const query = document.getElementById("cardSearchInput").value;
             if (!query) return;
-            fetch(`/searchcards?query=${encodeURIComponent(query)}&hasCommander=${hasCommander}`)
+            fetch(`/searchcards?query=${encodeURIComponent(query)}&hasCommander=${hasCommander}&format=${encodeURIComponent(deckFormat)}`)
                 .then(res => res.json())
                 .then(cards => {
                     const list = document.getElementById("searchResultsList");
                     list.innerHTML = '';
+                    if (cards.length === 0) {
+                        list.innerHTML = '<li>No results found</li>';
+                        alert("No cards found for your search.");
+                        hideCardImage();
+                        return;
+                    }
                     cards.forEach(card => {
                         const li = document.createElement("li");
                         li.textContent = card.name;
@@ -248,29 +269,29 @@
                         if (deckFormat === 'Commander' && !selectedCommander) {
                             li.onclick = () => {
                                 selectedCommander = card;
+                                hasCommander = true;
                                 renderDeckCards(currentDeckCards);
                             };
                         } else {
-                            // Otherwise, add to deck
-                            li.onclick = () => addCardToDeck(card.name);
+                            li.onclick = () => addCardToDeck(card);
                         }
                         list.appendChild(li);
                     });
                 })
-                .catch(err => console.error("Search failed:", err));
+                .catch(err => {
+                    console.error("Search failed:", err)
+                    alert("No legal cards found.");
+        });
         }
 
-        // Render deck cards and allow commander selection
         function renderDeckCards(cards) {
             const list = document.getElementById('cardListItems');
             list.innerHTML = '';
             currentDeckCards = cards;
-            // Commander top panel
             const commanderTopPanel = document.getElementById('commanderTopPanel');
             if (selectedCommander) {
                 commanderTopPanel.style.display = 'flex';
                 commanderTopPanel.innerHTML = '';
-                // Commander name only (no mana symbols)
                 const commDiv = document.createElement('div');
                 commDiv.textContent = selectedCommander.name;
                 commDiv.style.fontWeight = 'bold';
@@ -290,39 +311,41 @@
                 commanderTopPanel.style.display = 'none';
                 commanderTopPanel.innerHTML = '';
             }
-            // Deck cards list
-            cards.forEach((card, idx) => {
-                // Skip commander in deck list
+            // Group cards by name and count
+            const cardMap = {};
+            cards.forEach(card => {
                 if (selectedCommander && card.name === selectedCommander.name) return;
+                if (!cardMap[card.name]) {
+                    cardMap[card.name] = { ...card, count: 1 };
+                } else {
+                    cardMap[card.name].count++;
+                }
+            });
+            Object.values(cardMap).forEach(card => {
                 const li = document.createElement('li');
-                li.textContent = card.name;
+                li.textContent = card.count > 1 ? `${card.name} x${card.count}` : card.name;
                 li.style.cursor = 'pointer';
                 li.onmouseover = (e) => showCardImage(card, e);
                 li.onmousemove = (e) => showCardImage(card, e);
                 li.onmouseout = hideCardImage;
-                // Remove card from deck on click
+                // Remove one copy of the card from deck on click
                 li.onclick = () => {
-                    currentDeckCards = currentDeckCards.filter(c => c.name !== card.name);
+                    let removed = false;
+                    currentDeckCards = currentDeckCards.filter(c => {
+                        if (!removed && c.name === card.name) {
+                            removed = true;
+                            return false;
+                        }
+                        return true;
+                    });
+                    hideCardImage();
                     renderDeckCards(currentDeckCards);
                 };
-                // Commander select button
-                if (deckFormat === 'Commander' && !selectedCommander) {
-                    const setBtn = document.createElement('button');
-                    setBtn.textContent = 'Set as Commander';
-                    setBtn.style.marginLeft = '10px';
-                    setBtn.onclick = (ev) => {
-                        selectedCommander = card;
-                        renderDeckCards(currentDeckCards);
-                        ev.stopPropagation();
-                    };
-                    li.appendChild(setBtn);
-                }
                 list.appendChild(li);
             });
+            updateDeckValidity();
         }
 
-        // Add this JS function to send the current deck to the server
-        // Now sends commander as a separate object if present
         function saveDeck() {
             let commanderCard = null;
             let deckCardsToSave = currentDeckCards;
@@ -349,7 +372,6 @@
             });
         }
 
-        // Call renderDeckCards when loading deck
         function loadDeck() {
             if (!deckName) {
                 alert("No deck selected.");
@@ -367,7 +389,7 @@
                     document.getElementById("deckFormat").textContent = `Format: ${deckFormat}`;
                     document.getElementById("deckTitel").textContent = `Editing: ${displayName}`;
                     if (deckFormat === "Commander" && !deckCommander) {
-                        alert("This deck is a Commander deck but has no commander set. Please set a commander.");
+                        alert("This deck is a Commander deck but has no commander set. Initial searches will be limited to commanders.");
                         selectedCommander = null;
                     } else {
                         hasCommander = true;
@@ -377,6 +399,42 @@
                 })
                 .catch(err => console.error("Failed to load deck:", err));
         }
+        
+        function updateDeckValidity() {
+            const Indicator = document.getElementById("deckValidityIndicator");
+            const Text = document.getElementById("deckValidityText");
+            if (checkValidity()) {
+                Indicator.style.backgroundColor = "green";
+                Text.textContent = "Valid";
+            } else {
+                Indicator.style.backgroundColor = "red";
+                Text.textContent = "Invalid";
+            }
+        }
+
+        function checkValidity(){
+            if (deckFormat === "Commander"){
+                return validateCommander();
+            }else if (deckFormat === "Standard"){
+                return validateStandard();
+            }else{
+                alert("Unknown format: " + deckFormat);
+                return false;
+            }
+        }
+
+        function validateCommander() {
+            if (!selectedCommander){
+                return false;
+            }
+            if (currentDeckCards.length !== 99) {
+                return false;
+            }
+        }
+
+        function validateStandard() {
+            return !currentDeckCards.length < 60;
+        }
 
         loadDeck();
         // Add event listener for Enter key on search input
@@ -385,7 +443,6 @@
                 handleSearch();
             }
         });
-        // --- End inlined editor.js ---
     </script>
 </body>
 
