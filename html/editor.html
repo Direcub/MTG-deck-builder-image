@@ -225,12 +225,17 @@
                 }
             }
             if (deckFormat === 'Commander') {
-                if (currentDeckCards.some(c => c.name === card.name)) {
-                    alert('You can only have one copy of each card in Commander.');
+                const unlimited = card.oracle_text && card.oracle_text.includes('any number of cards named');
+                const count = currentDeckCards.filter(c => c.name === card.name).length;
+                if (!unlimited && currentDeckCards.some(c => c.name === card.name)) {
+                    alert('You can only have one copy of this card in Commander.');
                     return;
                 }
-                currentDeckCards.push(card);
-                renderDeckCards(currentDeckCards);
+                // For cards with unlimited rule, allow any number
+                if (unlimited || count < 1) {
+                    currentDeckCards.push(card);
+                    renderDeckCards(currentDeckCards);
+                }
             } else if (deckFormat === 'Standard') {
                 const count = currentDeckCards.filter(c => c.name === card.name).length;
                 const unlimited = card.oracle_text && card.oracle_text.includes('any number of cards named');
@@ -433,7 +438,11 @@
         }
 
         function validateStandard() {
-            return !currentDeckCards.length < 60;
+         if (currentDeckCards.length < 60){
+            return false;
+         }else {
+            return true 
+         }
         }
 
         loadDeck();
