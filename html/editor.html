@@ -4,13 +4,126 @@
 <head>
     <meta charset="UTF-8">
     <title>Deck Editor</title>
+    <style>
+        :root {
+            --primary: hsl(235, 86%, 65%);
+            --primary-light: hsl(235, 88%, 73%);
+            --dark: #121212;
+            --light: #E4E4E4;
+            --grey: #424242;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        h1,
+        h3,
+        p,
+        label {
+            color: var(--light);
+        }
+
+        #cardList,
+        #commanderPanel {
+            background-color: #333;
+            color: var(--light);
+            border-radius: 8px;
+        }
+
+        #commanderPanel {
+            background-color: #222;
+        }
+
+        #cardListItems li,
+        #searchResultsList li {
+            color: var(--light);
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        #cardListItems li:hover,
+        #searchResultsList li:hover {
+            background-color: var(--grey);
+        }
+
+        input,
+        button {
+            background-color: var(--grey);
+            color: var(--light);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: darkred;
+            color: var(--light);
+            cursor: pointer;
+            transition-duration: 0.4s;
+        }
+
+        button:hover {
+            background-color: white;
+            color: red;
+        }
+
+        #cardSearchInput {
+            width: 300px;
+            margin-bottom: 10px;
+        }
+
+        /* Centered Save Deck button at the bottom */
+        #saveDeckButton {
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            z-index: 10;
+        }
+
+        /* New styles for commander display */
+        #commanderTopPanel {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0 0 0;
+        }
+
+        #commanderTopPanel div {
+            font-weight: bold;
+            background: #444;
+            padding: 8px;
+            border-radius: 6px;
+            margin: 0 10px;
+        }
+    </style>
 </head>
 
 <body>
     <h1 id="deckTitel">Editing: ...</h1>
-    <p id="deckForma">Format: ...</p>
+    <span id="deckValidityIndicator" title="Deck Validity" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#888;margin-left:10px;vertical-align:middle;"></span>
+    <span id="deckValidityText" style="margin-left:6px;font-weight:bold;"></span>
+    <p id="deckFormat">Format: ...</p>
 
-    <div style="display: flex; height: 100vh;">
+
+    <div id="commanderTopPanel" style="display:none; justify-content:center; align-items:center; margin: 10px 0 0 0;">
+    </div>
+
+    <div id="returnButton" style="position: absolute; top: 20px; right: 32px; z-index: 20;"">
+        <button onclick="window.location.href='/'">Return to Deck Libary</button>
+    </div>
+
+    <div style="display: flex; height: calc(100vh - 140px);">
         <div id="cardList" style="width: 250px; background-color: #333; color: white; padding: 10px; overflow-y: auto;">
             <h3>Deck Cards</h3>
             <ul id="cardListItems" style="list-style: none; padding: 0;"></ul>
@@ -18,9 +131,7 @@
 
         <div style="flex-grow: 1; text-align: center; padding: 20px;">
             <input type="text" id="cardSearchInput" placeholder="Search for cards..." />
-            <button onclick="searchCards()">Search</button>
-
-            <div id="searchResults" style="margin-top: 20px;"></div>
+            <button onclick="handleSearch()">Search</button>
         </div>
 
         <div id="commanderPanel" style="width: 250px; background-color: #222; color: white; padding: 10px; overflow-y: auto;">
@@ -28,61 +139,320 @@
             <ul id="searchResultsList" style="list-style: none; padding: 0;"></ul>
         </div>
     </div>
-</body>
 
-<script>
-    const params = new URLSearchParams(window.location.search)
-    const deckName = params.get("deck")
-    console.log("Editing deck:", deckName);
+    <div id="saveDeckButton">
+        <button onclick="saveDeck()" style="font-size: 1.2em; padding: 12px 32px;">Save Deck</button>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search)
+        const deckName = params.get("deck")
+        let deckFormat = "Unknown";
+        let hasCommander = false;
+        let currentDeckCards = [];
+        let selectedCommander = null;
+        console.log("Editing deck:", deckName);
 
-    function loadDeck() {
-        const params = new URLSearchParams(window.location.search);
-        const deckName = params.get("deck");
 
-        if (!deckName) {
-            alert("No deck selected.");
-            return;
+        function showCardImage(card, event) {
+            let img = document.getElementById('cardHoverImage');
+            if (!img) {
+                img = document.createElement('img');
+                img.id = 'cardHoverImage';
+                img.style.position = 'fixed';
+                img.style.zIndex = 1000;
+                img.style.maxWidth = '300px';
+                img.style.maxHeight = '420px';
+                img.style.pointerEvents = 'none';
+                document.body.appendChild(img);
+            }
+            // Use the standard face (normal image), or for double-faced cards, use the front face
+            let url = null;
+            if (card.image_uris && card.image_uris.normal) {
+                url = card.image_uris.normal;
+            } else if (card.card_faces && card.card_faces[0] && card.card_faces[0].image_uris && card.card_faces[0].image_uris.normal) {
+                url = card.card_faces[0].image_uris.normal;
+            }
+            if (url) {
+                img.src = url;
+                img.style.display = 'block';
+                const imgWidth = 300, imgHeight = 420;
+                let left = event.clientX + 20;
+                let top = event.clientY - 100;
+                if (left + imgWidth > window.innerWidth) {
+                    left = event.clientX - imgWidth - 20;
+                }
+                if (top + imgHeight > window.innerHeight) {
+                    top = window.innerHeight - imgHeight - 20;
+                }
+                if (left < 0) left = 0;
+                if (top < 0) top = 0;
+                img.style.left = left + 'px';
+                img.style.top = top + 'px';
+            } else {
+                img.style.display = 'none';
+            }
         }
 
-        fetch(`/getdeck?deck=${encodeURIComponent(deckName)}`)
-            .then(res => res.text())
-            .then(text => {
-            const lines = text.split('\n');
-            const formatLine = lines.find(line => line.startsWith("# format: "));
-            const format = formatLine ? formatLine.replace("# format: ", "").trim() : "Unknown";
+        function hideCardImage() {
+            const img = document.getElementById('cardHoverImage');
+            if (img) img.style.display = 'none';
+        }
 
-            document.getElementById("deckFormat").textContent = `Format: ${format}`;
-            
-            if (format === "Commander") {
-                enableCommanderMode();
+        function isBasicLand(card) {
+            if (card.type_line && card.type_line.includes('Basic Land')) return true;
+            // Fallback: check common basic land names
+            const basicNames = [
+                'Plains', 'Island', 'Swamp', 'Mountain', 'Forest',
+                'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island',
+                'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'
+            ];
+            return basicNames.includes(card.name);
+        }
+
+        function addCardToDeck(card) {
+            // If no commander and format is Commander, set as commander
+            if (deckFormat === 'Commander' && !selectedCommander) {
+                selectedCommander = card;
+                renderDeckCards(currentDeckCards);
+                return;
             }
+            if (deckFormat === 'Commander' && selectedCommander && card.color_identity) {
+                for (const color of card.color_identity) {
+                    if (!window.commanderColorIdentity.includes(color)) {
+                        alert('Card color identity does not match commander.');
+                        return;
+                    }
+                }
+            }
+            if (deckFormat === 'Commander') {
+                const unlimited = card.oracle_text && card.oracle_text.includes('any number of cards named');
+                const count = currentDeckCards.filter(c => c.name === card.name).length;
+                if (!unlimited && currentDeckCards.some(c => c.name === card.name)) {
+                    alert('You can only have one copy of this card in Commander.');
+                    return;
+                }
+                // For cards with unlimited rule, allow any number
+                if (unlimited || count < 1) {
+                    currentDeckCards.push(card);
+                    renderDeckCards(currentDeckCards);
+                }
+            } else if (deckFormat === 'Standard') {
+                const count = currentDeckCards.filter(c => c.name === card.name).length;
+                const unlimited = card.oracle_text && card.oracle_text.includes('any number of cards named');
+                if (!isBasicLand(card) && !unlimited && count >= 4) {
+                    alert('You can only have up to 4 copies of a non-basic land in Standard.');
+                    return;
+                }
+                currentDeckCards.push(card);
+                renderDeckCards(currentDeckCards);
+            }
+        }
 
-            // Later: parse and display the rest of the deck
-        })
-        .catch(err => console.error("Failed to load deck:", err));
-}
+        function handleSearch() {
+            const query = document.getElementById("cardSearchInput").value;
+            if (!query) return;
+            fetch(`/searchcards?query=${encodeURIComponent(query)}&hasCommander=${hasCommander}&format=${encodeURIComponent(deckFormat)}`)
+                .then(res => res.json())
+                .then(cards => {
+                    const list = document.getElementById("searchResultsList");
+                    list.innerHTML = '';
+                    if (cards.length === 0) {
+                        list.innerHTML = '<li>No results found</li>';
+                        alert("No cards found for your search.");
+                        hideCardImage();
+                        return;
+                    }
+                    cards.forEach(card => {
+                        const li = document.createElement("li");
+                        li.textContent = card.name;
+                        li.style.cursor = "pointer";
+                        li.cardObj = card; // Store card object for later
+                        li.onmouseover = (e) => showCardImage(card, e);
+                        li.onmousemove = (e) => showCardImage(card, e);
+                        li.onmouseout = hideCardImage;
+                        // If Commander format and no commander, clicking sets as commander
+                        if (deckFormat === 'Commander' && !selectedCommander) {
+                            li.onclick = () => {
+                                selectedCommander = card;
+                                hasCommander = true;
+                                renderDeckCards(currentDeckCards);
+                            };
+                        } else {
+                            li.onclick = () => addCardToDeck(card);
+                        }
+                        list.appendChild(li);
+                    });
+                })
+                .catch(err => {
+                    console.error("Search failed:", err)
+                    alert("No legal cards found.");
+        });
+        }
 
-    function searchCards() {
-        const query = document.getElementById("cardSearchInput").value;
-        if (!query) return;
+        function renderDeckCards(cards) {
+            const list = document.getElementById('cardListItems');
+            list.innerHTML = '';
+            currentDeckCards = cards;
+            const commanderTopPanel = document.getElementById('commanderTopPanel');
+            if (selectedCommander) {
+                commanderTopPanel.style.display = 'flex';
+                commanderTopPanel.innerHTML = '';
+                const commDiv = document.createElement('div');
+                commDiv.textContent = selectedCommander.name;
+                commDiv.style.fontWeight = 'bold';
+                commDiv.style.background = '#444';
+                commDiv.style.padding = '8px';
+                commDiv.style.borderRadius = '6px';
+                commDiv.style.margin = '0 10px';
+                commDiv.onmouseover = (e) => showCardImage(selectedCommander, e);
+                commDiv.onmousemove = (e) => showCardImage(selectedCommander, e);
+                commDiv.onmouseout = hideCardImage;
+                commanderTopPanel.appendChild(commDiv);
+                // Hide card image if mouse leaves the whole commander panel
+                commanderTopPanel.onmouseleave = hideCardImage;
+                // Save color identity to a variable for later checks
+                window.commanderColorIdentity = selectedCommander.color_identity ? [...selectedCommander.color_identity] : [];
+            } else {
+                commanderTopPanel.style.display = 'none';
+                commanderTopPanel.innerHTML = '';
+            }
+            // Group cards by name and count
+            const cardMap = {};
+            cards.forEach(card => {
+                if (selectedCommander && card.name === selectedCommander.name) return;
+                if (!cardMap[card.name]) {
+                    cardMap[card.name] = { ...card, count: 1 };
+                } else {
+                    cardMap[card.name].count++;
+                }
+            });
+            Object.values(cardMap).forEach(card => {
+                const li = document.createElement('li');
+                li.textContent = card.count > 1 ? `${card.name} x${card.count}` : card.name;
+                li.style.cursor = 'pointer';
+                li.onmouseover = (e) => showCardImage(card, e);
+                li.onmousemove = (e) => showCardImage(card, e);
+                li.onmouseout = hideCardImage;
+                // Remove one copy of the card from deck on click
+                li.onclick = () => {
+                    let removed = false;
+                    currentDeckCards = currentDeckCards.filter(c => {
+                        if (!removed && c.name === card.name) {
+                            removed = true;
+                            return false;
+                        }
+                        return true;
+                    });
+                    hideCardImage();
+                    renderDeckCards(currentDeckCards);
+                };
+                list.appendChild(li);
+            });
+            updateDeckValidity();
+        }
 
-        fetch(`/searchcards?query=${encodeURIComponent(query)}`)
-            .then(res => res.json())
-            .then(cards => {
-                const list = document.getElementById("searchResultsList");
-                list.innerHTML = '';
-
-                cards.forEach(card => {
-                    const li = document.createElement("li");
-                    li.textContent = card.name;
-                    li.style.cursor = "pointer";
-                    li.onclick = () => addCardToDeck(card.name);
-                    list.appendChild(li);
-                });
+        function saveDeck() {
+            let commanderCard = null;
+            let deckCardsToSave = currentDeckCards;
+            if (deckFormat === "Commander") {
+                commanderCard = selectedCommander;
+                // Exclude commander from deck cards
+                if (commanderCard) {
+                    deckCardsToSave = currentDeckCards.filter(c => c.name !== commanderCard.name);
+                }
+            }
+            fetch('/savedeck', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: deckName.replace('.txt', ''),
+                    commander: commanderCard,
+                    cards: deckCardsToSave,
+                    format: deckFormat // <-- include format in save request
+                })
             })
-            .catch(err => console.error("Search failed:", err));
-    }
-</script>
+            .then(res => {
+                if (res.ok) alert('Deck saved!');
+                else alert('Failed to save deck.');
+            });
+        }
 
+        function loadDeck() {
+            if (!deckName) {
+                alert("No deck selected.");
+                return;
+            }
+            fetch(`/deckinfo`)
+                .then(res => res.json())
+                .then(deck => {
+                    deckFormat = deck.format || "Unknown";
+                    const deckCommander = deck.Commander && deck.Commander.name ? deck.Commander : null;
+                    let displayName = deck.Name || deckName;
+                    if (displayName.endsWith('.txt')) {
+                        displayName = displayName.slice(0, -4);
+                    }
+                    document.getElementById("deckFormat").textContent = `Format: ${deckFormat}`;
+                    document.getElementById("deckTitel").textContent = `Editing: ${displayName}`;
+                    if (deckFormat === "Commander" && !deckCommander) {
+                        alert("This deck is a Commander deck but has no commander set. Initial searches will be limited to commanders.");
+                        selectedCommander = null;
+                    } else {
+                        hasCommander = true;
+                        selectedCommander = deckCommander;
+                    }
+                    renderDeckCards(deck.cards || []);
+                })
+                .catch(err => console.error("Failed to load deck:", err));
+        }
+        
+        function updateDeckValidity() {
+            const Indicator = document.getElementById("deckValidityIndicator");
+            const Text = document.getElementById("deckValidityText");
+            if (checkValidity()) {
+                Indicator.style.backgroundColor = "green";
+                Text.textContent = "Valid";
+            } else {
+                Indicator.style.backgroundColor = "red";
+                Text.textContent = "Invalid";
+            }
+        }
+
+        function checkValidity(){
+            if (deckFormat === "Commander"){
+                return validateCommander();
+            }else if (deckFormat === "Standard"){
+                return validateStandard();
+            }else{
+                alert("Unknown format: " + deckFormat);
+                return false;
+            }
+        }
+
+        function validateCommander() {
+            if (!selectedCommander){
+                return false;
+            }
+            if (currentDeckCards.length !== 99) {
+                return false;
+            }
+        }
+
+        function validateStandard() {
+         if (currentDeckCards.length < 60){
+            return false;
+         }else {
+            return true 
+         }
+        }
+
+        loadDeck();
+        // Add event listener for Enter key on search input
+        document.getElementById('cardSearchInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+    </script>
+</body>
 
 </html>

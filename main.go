@@ -14,18 +14,20 @@ import (
 )
 
 type Deck struct {
-	name          string
-	commander     Scryfall.Card
-	cards         []Scryfall.Card
-	colorIdentity string
-	file          string
+	Name          string          `json:"name"`
+	Commander     Scryfall.Card   `json:"commander"`
+	Cards         []Scryfall.Card `json:"cards"`
+	ColorIdentity string          `json:"colorIdentity"`
+	File          string          `json:"file"`
+	Format        string          `json:"format"`
 }
 
 type Passthroughs struct {
 	working_Deck Deck
+	Client       *Scryfall.Client
 }
 
-//go:embed html
+//go:embed html/*
 var staticFiles embed.FS
 
 func main() {
@@ -53,11 +55,19 @@ func main() {
 
 	psth := &Passthroughs{}
 
+	psth.Client, err = Scryfall.NewClient()
+	if err != nil {
+		log.Fatalf("Failed to create Scryfall client: %v", err)
+	}
+
 	router.Get("/", psth.handlerLanding)
 	router.Post("/newdeck/", psth.handlercreatedeck)
 	router.Get("/listdecks/", psth.handlerListdecks)
 	router.Get("/editor", psth.handlerEditor)
 	router.Get("/searchcards", psth.handlerSearchCards)
+	router.Get("/deckinfo", psth.handlerDeckInfo)
+	router.Post("/savedeck", psth.handlerSaveDeck)
+	router.Delete("/deletedeck", psth.handlerDeleteDeck)
 
 	srv := &http.Server{
 		Addr:              ":" + port,
