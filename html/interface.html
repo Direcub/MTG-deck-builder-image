@@ -38,6 +38,7 @@
         </div>
         <div id="deckActions" class="section"></div>
     </div>
+    </div>
     <style>
         :root {
             --primary: hsl(235, 86%, 65%);
@@ -223,6 +224,13 @@
         };
         container.appendChild(editButton);
 
+        const exportButton = document.createElement('button');
+        exportButton.textContent = 'Export Deck';
+        exportButton.onclick = function() {
+            openExportModal(deckName);
+        };
+        container.appendChild(exportButton);
+
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete Deck';
         deleteButton.style.padding = editButton.style.padding + '5px';
@@ -244,6 +252,39 @@
         container.appendChild(deleteButton);
 }
 
+    let exportModalDeckName = null;
+
+    function openExportModal(deckName) {
+        exportModalDeckName = deckName;
+        document.getElementById('exportModal').style.display = 'flex';
+    }
+
+    function closeExportModal() {
+        document.getElementById('exportModal').style.display = 'none';
+        exportModalDeckName = null;
+    }
+
+    function exportDeckWithFormat(format) {
+        if (!exportModalDeckName) return;
+        const url = `/exportdeck?name=${encodeURIComponent(exportModalDeckName)}&format=${encodeURIComponent(format)}`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        closeExportModal();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('modalCancelBtn').onclick = closeExportModal;
+        document.getElementById('exportCockatriceBtn').onclick = function() {
+            exportDeckWithFormat('cockatrice');
+        };
+        document.getElementById('exportMTGOBtn').onclick = function() {
+            exportDeckWithFormat('mtgo');
+        };
+    });
 window.onload = function () {
     loadDecks();
 }
@@ -251,5 +292,15 @@ window.onload = function () {
     
     
     </script>
+    <div id="exportModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#222; color:#fff; padding:32px 24px; border-radius:10px; min-width:300px; max-width:90vw; box-shadow:0 2px 16px #000; display:flex; flex-direction:column; align-items:center;">
+            <h2 style="margin-top:0;">Export Deck</h2>
+            <div style="display:flex; gap:16px; margin-bottom:16px;">
+                <button id="exportCockatriceBtn">Cockatrice (.cod)</button>
+                <button id="exportMTGOBtn">MTGO (.txt)</button>
+            </div>
+            <button id="modalCancelBtn" style="margin-top:8px;">Cancel</button>
+        </div>
+    </div>
 </body>
 </html>

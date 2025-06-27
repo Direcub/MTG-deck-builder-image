@@ -7,6 +7,14 @@ import (
 )
 
 func (pass *Passthroughs) handlerListdecks(w http.ResponseWriter, r *http.Request) {
+	if _, err := os.Stat("./decks"); os.IsNotExist(err) {
+		err := os.Mkdir("./decks", 0755)
+		if err != nil {
+			http.Error(w, "Unable to create deck directory", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	files, err := os.ReadDir("./decks")
 	if err != nil {
 		http.Error(w, "Unable to read deck directory", http.StatusInternalServerError)

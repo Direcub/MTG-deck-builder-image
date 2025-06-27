@@ -14,12 +14,13 @@ import (
 )
 
 type Deck struct {
-	Name          string          `json:"name"`
-	Commander     Scryfall.Card   `json:"commander"`
-	Cards         []Scryfall.Card `json:"cards"`
-	ColorIdentity string          `json:"colorIdentity"`
-	File          string          `json:"file"`
-	Format        string          `json:"format"`
+	Name             string          `json:"name"`
+	Commander        Scryfall.Card   `json:"commander"`
+	CommanderRawName string          `json:"commanderRawName"`
+	Cards            []Scryfall.Card `json:"cards"`
+	ColorIdentity    string          `json:"colorIdentity"`
+	File             string          `json:"file"`
+	Format           string          `json:"format"`
 }
 
 type Passthroughs struct {
@@ -68,6 +69,7 @@ func main() {
 	router.Get("/deckinfo", psth.handlerDeckInfo)
 	router.Post("/savedeck", psth.handlerSaveDeck)
 	router.Delete("/deletedeck", psth.handlerDeleteDeck)
+	router.Get("/exportdeck", psth.handlerExportDeck)
 
 	srv := &http.Server{
 		Addr:              ":" + port,
