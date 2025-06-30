@@ -28,3 +28,4 @@ This app is the culmination of my study on [Boot.dev](https://boot.dev). For my 
 - Add more filtering options
 
 ![landing screen](landing.png)
+![editor screen](editor.png)
