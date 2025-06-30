@@ -2,7 +2,9 @@
 
 This app is the culmination of my study on [Boot.dev](https://boot.dev). It supports building, exporting, and storage of Magic: The Gathering (MTG) decks
 
-For my final project, I decided to merge two passions: **Magic: The Gathering** and **coding**. I wrote this to demonstrate proficiency in setting up backend servers and working with frontend data transfer.
+For my final project, I decided to merge two passions: **Magic: The Gathering** and **coding**. I wanted to ensure that i had access to a deck builder that both **had access to all cards**, and **was low maintainence.** 
+
+I source card information from scryfall itself so that theres never a card database to update on the user end, and made it a dockerizable app that loads onto the browser to help with compatibility.
 
 ## Front-end Feature Set
 
@@ -44,5 +46,18 @@ JavaScript: Front-end logic and interactivity
 
 ## Setup
 1. Clone the repo
-2. Build and run the app with `go build` and `./MTG-deck-builder-image`
-3. The app will open on http://localhost:8080/ by default, port can be set in the .env file.   
+2. Run `go mod init`
+3. Build and run the app with `go build` and `./MTG-deck-builder-image`
+4. The app will open on http://localhost:8080/ by default, port can be set in the .env file.   
+
+## Docker
+If you'd prefer to use a docker image to handle dependancies and such, perform steps 1 and 2 of the setup and run
+
+`docker build -t mtg-deck-builder .`
+
+and 
+
+`docker run -p 8080:8080 --env-file .env mtg-deck-builder`
+
+the app will be available at http://localhost:8080
+
