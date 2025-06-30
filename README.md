@@ -19,3 +19,6 @@ The webapp supports creation and deletion of decks, exporting to either Cockatri
 - **GET /exportdeck** — Formats and starts download of the current deck.
 
 ---
+# Future features
+* Add EDHREC recommendations
+* Add more filtering options
