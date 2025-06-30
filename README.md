@@ -1,7 +1,3 @@
-Your README is clear, concise, and covers the essentials! For a hiring manager, a little extra polish and formatting will make it even more professional and inviting. Here are some suggestions:
-
----
-
 # MTG Deck Builder
 
 This app is the culmination of my study on [Boot.dev](https://boot.dev). For my final project, I decided to merge two passions: **Magic: The Gathering** and **coding**. I wrote this to demonstrate proficiency in setting up backend servers and working with frontend data transfer.
@@ -30,3 +26,5 @@ This app is the culmination of my study on [Boot.dev](https://boot.dev). For my 
 
 - Add EDHREC recommendations
 - Add more filtering options
+
+![landing screen](landing.png)
