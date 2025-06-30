@@ -24,9 +24,9 @@ For my final project, I decided to merge two passions: **Magic: The Gathering** 
 | DELETE | `/deletedeck`    | Permanently removes the specified deck from the filesystem                   |
 | GET    | `/exportdeck`    | Formats and starts download of the current deck                              |
 
-![landing screen](landing.png)
+![landing screen](images/landing.png)
 
-![editor screen](editor.png)
+![editor screen](images/editor.png)
 
 ## Tech Stack
 I built this app using   
