@@ -1,6 +1,6 @@
 # MTG Deck Builder
 
-This app is the culmination of my study on [Boot.dev](https://boot.dev). It supports building, exporting, and storage of MTG decks
+This app is the culmination of my study on [Boot.dev](https://boot.dev). It supports building, exporting, and storage of Magic: The Gathering (MTG) decks
 
 For my final project, I decided to merge two passions: **Magic: The Gathering** and **coding**. I wrote this to demonstrate proficiency in setting up backend servers and working with frontend data transfer.
 
@@ -25,14 +25,16 @@ For my final project, I decided to merge two passions: **Magic: The Gathering** 
 | GET    | `/exportdeck`    | Formats and starts download of the current deck                              |
 
 ![landing screen](landing.png)
+
 ![editor screen](editor.png)
 
-## Tech-Stack
+## Tech Stack
 I built this app using   
 [Chi](https://github.com/go-chi/chi): For routing the server.     
 [GO](https://go.dev/): Language the server is written in.    
-[Go-scryfall](https://github.com/BlueMonday/go-scryfall?tab=readme-ov-file): Api that made accessing scryfall much easier.     
-JavaScript: Front-end programming
+[Go-scryfall](https://github.com/BlueMonday/go-scryfall?tab=readme-ov-file): API client for accessing Scryfall.        
+JavaScript: Front-end logic and interactivity  
+
 
 
 ## Future Features
@@ -43,3 +45,4 @@ JavaScript: Front-end programming
 ## Setup
 1. Clone the repo
 2. Build and run the app with `go build` and `./MTG-deck-builder-image`
+3. The app will open on http://localhost:8080/ by default, port can be set in the .env file.   
